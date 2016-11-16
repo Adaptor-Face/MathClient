@@ -36,7 +36,6 @@ class Calculator {
         String returnString = "";
         if (steps) {
             expression = expression.replace("with steps", "");
-            expression.trim();
         }
         expression = parseParanthesises(expression);
         while (expression.contains("(")) {
@@ -78,18 +77,27 @@ class Calculator {
         BigDecimal number = new BigDecimal("" + numbers.get(0));
         for (int i = 1; i < numbers.size(); i++) {
             String operand = operands.get(i - 1);
-            if (operand.equals("+")) {
-                number = number.add(new BigDecimal("" + numbers.get(i)));
-            } else if (operand.equals("-")) {
-                number = number.subtract(new BigDecimal("" + numbers.get(i)));
-            } else if (operand.equals("*")) {
-                number = number.multiply(new BigDecimal("" + numbers.get(i)));
-            } else if (operand.equals("/")) {
-                number = number.divide(new BigDecimal("" + numbers.get(i)));
-            } else if (operand.equals("^")) {
-                number = number.pow(Integer.parseInt(numbers.get(i).toString()));
-            } else if (operand.equals("%")) {
-                number = number.remainder(new BigDecimal("" + numbers.get(i)));
+            switch (operand) {
+                case "+":
+                    number = number.add(new BigDecimal("" + numbers.get(i)));
+                    break;
+                case "-":
+                    number = number.subtract(new BigDecimal("" + numbers.get(i)));
+                    break;
+                case "*":
+                    number = number.multiply(new BigDecimal("" + numbers.get(i)));
+                    break;
+                case "/":
+                    number = number.divide(new BigDecimal("" + numbers.get(i)));
+                    break;
+                case "^":
+                    number = number.pow(Integer.parseInt(numbers.get(i).toString()));
+                    break;
+                case "%":
+                    number = number.remainder(new BigDecimal("" + numbers.get(i)));
+                    break;
+                default:
+                    break;
             }
         }
         return number;
