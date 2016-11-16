@@ -73,20 +73,25 @@ class Calculator {
 
         ArrayList<BigDecimal> numbers = new ArrayList<>();
         ArrayList<String> operands = new ArrayList<>();
+        //Regex expression for any number
         Pattern intPattern = Pattern.compile("-?\\d+");
+        //Regex expression for each operand
         Pattern operandPattern = Pattern.compile("\\+?\\-?\\*?\\^?\\%?\\/?");
         String[] str = expression.replace(" ", "").replace("+", " ").replace("-", " ").replace("*", " ").replace("/", " ").replace("^", " ").replace("%", " ").split(" ");
+        //adds each number to the number list
         for (String number : str) {
             if (intPattern.matcher("" + number).matches()) {
                 numbers.add(new BigDecimal(number));
             }
         }
         char[] chars = expression.replace("\\d+", "").replace(" ", "").toCharArray();
+        //adds each operator to the operator list
         for (char character : chars) {
             if (operandPattern.matcher("" + character).matches()) {
                 operands.add("" + character);
             }
         }
+        //Decide what operation must be used.
         BigDecimal number = new BigDecimal("" + numbers.get(0));
         for (int i = 1; i < numbers.size(); i++) {
             String operand = operands.get(i - 1);
@@ -124,6 +129,7 @@ class Calculator {
     private String parseParanthesises(String expression) {
         Pattern operandPattern = Pattern.compile("\\+?\\-?\\*?\\^?\\%?\\/?");
         boolean finished = false;
+        //will check if each parenthesis has an operator in front or after the paranthesis.
         while (!finished) {
             char[] chars = expression.replace(" ", "").toCharArray();
             for (int i = 1; i < chars.length - 1; i++) {
