@@ -1,8 +1,6 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+* a basic calculator that accepts a wide varerity of math expressions, can supply with steps to see each calculation step for complex expressions
+*/
 package mathclient;
 
 import java.math.BigDecimal;
@@ -19,19 +17,29 @@ class Calculator {
 
     private static boolean steps = false;
 
-    static boolean isMathExpression(String message) {
-        if (message.endsWith("with steps")) {
+    /**
+     * Returns true if the given expression is a math expression (and/or contains "with steps" at the end)
+     * @param string the string to check if it is a math expression
+     * @return true if it is a math expression, false otherwise
+     */
+    static boolean isMathExpression(String string) {
+        if (string.endsWith("with steps")) {
             steps = true;
-            message = message.replace("with steps", "");
+            string = string.replace("with steps", "");
         } else {
             steps = false;
         }
 
-        String numberString = message.replace(" ", "").replace("+", "").replace("-", "").replace("*", "").replace("/", "").replace("^", "").replace("%", "").replace("(", "").replace(")", "");
+        String numberString = string.replace(" ", "").replace("+", "").replace("-", "").replace("*", "").replace("/", "").replace("^", "").replace("%", "").replace("(", "").replace(")", "");
         Pattern intPattern = Pattern.compile("-?\\d+");
         return intPattern.matcher(numberString).matches();
     }
 
+    /**
+     * Calculates a given math expression and can show steps if "requested" by adding "with steps" after the expression.
+     * @param expression the math expression to calculate
+     * @return a string representing the answer.
+     */
     public String calculate(String expression) {
         String returnString = "";
         if (steps) {
@@ -56,6 +64,11 @@ class Calculator {
         return returnString;
     }
 
+    /**
+     * Calculates a given expression. calulates squentially, so 2 + 5 * 2 = 20, and not 12
+     * @param expression the math expression to calculate
+     * @return returns a BigDecimal with the answer
+     */
     private BigDecimal calc(String expression) {
 
         ArrayList<BigDecimal> numbers = new ArrayList<>();
@@ -103,6 +116,11 @@ class Calculator {
         return number;
     }
 
+    /**
+     * Checks if a paranthesis has an operator in front, or after. Inserts a multiplier if none is present
+     * @param expression the math expression to parse
+     * @return the finished expression, ready for calculation
+     */
     private String parseParanthesises(String expression) {
         Pattern operandPattern = Pattern.compile("\\+?\\-?\\*?\\^?\\%?\\/?");
         boolean finished = false;
