@@ -56,7 +56,6 @@ class Calculator {
         if (steps) {
             stepString += "\n" + expression;
         }
-        boolean hadParanthesis = expression.contains("(");
         while (expression.contains("(")) {
             int index = expression.indexOf(")");
             int lastIndex = expression.substring(0, expression.indexOf(")")).lastIndexOf("(");
@@ -66,9 +65,9 @@ class Calculator {
             }
             expression = expression.substring(0, lastIndex) + calcString + expression.substring(index + 1);
             expression = expression.replace(calcString, calculationRules(calcString.substring(1, calcString.length() - 1)));
+        if (steps) {
+            stepString += "\n\n" + expression;
         }
-        if (steps && hadParanthesis) {
-            stepString += "\n\nThen the main expression " + expression + ":\n" + expression;
         }
 
         if (steps) {
@@ -163,41 +162,6 @@ class Calculator {
         }
         return number;
     }
-
-    private ArrayList<String> parseExpression(String expression) {
-        Pattern intPattern = Pattern.compile("-?\\d+");
-        expression = expression.replace(" ", "");
-        String[] operands = {"^", "/", "*", "-", "+", "%"};
-        for (String operand : operands) {
-            expression = expression.replace(operand, " " + operand + " ");
-        }
-        ArrayList<String> operations = new ArrayList<>();
-        String[] str = expression.split(" ");
-        for (String part : str) {
-            if (!part.equals("")) {
-                operations.add(part);
-            }
-        }
-        ArrayList<String> finalList = new ArrayList<>();
-        finalList.add("empty");
-        String lastPart = "";
-        boolean lastWasNumber = false;
-        for (String nextPart : operations) {
-            if (!lastPart.isEmpty()) {
-                lastWasNumber = intPattern.matcher(lastPart).matches();
-                if (intPattern.matcher(nextPart).matches() && !lastWasNumber & !finalList.get(finalList.size() - 1).equals("-")) {
-                    nextPart = "-" + nextPart;
-                }
-                if (!(!lastWasNumber && nextPart.equals("-"))) {
-                    finalList.add(nextPart);
-                }
-            }
-            lastPart = nextPart;
-        }
-        finalList.remove(0);
-        return finalList;
-    }
-
     /**
      * Checks if a paranthesis has an operator in front, or after. Inserts a
      * multiplier if none is present
