@@ -46,74 +46,85 @@ class Calculator {
      * @return a string representing the answer.
      */
     public String calculate(String expression) {
-        String test = calculationRules(expression);
-        String returnString = "";
+        String returnString = " =";
         if (steps) {
             expression = expression.replace("with steps", "");
         }
         if (expression.contains("(")) {
             expression = parseParanthesises(expression);
         }
+        if (steps) {
+            stepString += "\n" + expression;
+        }
+        boolean hadParanthesis = expression.contains("(");
         while (expression.contains("(")) {
-            if (steps) {
-                returnString += "\n" + expression + " = ";
-            }
             int index = expression.indexOf(")");
             int lastIndex = expression.substring(0, expression.indexOf(")")).lastIndexOf("(");
             String calcString = "[" + expression.substring(lastIndex + 1, index) + "]";
+            if (steps) {
+                stepString += "\n" + "Calculate paranthesises first: " + expression.substring(lastIndex + 1, index) + ":\n" + expression.substring(lastIndex + 1, index);
+            }
             expression = expression.substring(0, lastIndex) + calcString + expression.substring(index + 1);
-            expression = expression.replace(calcString, calc(calcString.substring(1, calcString.length() - 1)).toString());
+            expression = expression.replace(calcString, calculationRules(calcString.substring(1, calcString.length() - 1)));
         }
+        if (steps && hadParanthesis) {
+            stepString += "\n\nThen the main expression " + expression + ":\n" + expression;
+        }
+
         if (steps) {
-            returnString += "\n" + expression + " = ";
-            returnString = returnString.substring(0, returnString.length() - 3);
+            String test = calculationRules(expression);
+            stepString += "\n= " + test;
+            return stepString;
         }
-        BigDecimal answer = calc(expression);
-        if (steps) {
-            returnString += "\n= " + stepString;
-        } else {
-            returnString += "\n= " + answer.toString();
-        }
+        returnString += "\n= " + calculationRules(expression);
         return returnString;
     }
 
     private String calculationRules(String expression) {
-        char[] operands = {'^', '/', '*', '-', '+', '%'};
-        String expressionString = expression.replace("+", " + ").replace("*", " * ").replace("/", " / ").replace("^", " ^ ").replace("%", " % ").replace("-", " - ");
+        char[] operands = {'^', '/', '*', '+', '-', '%'};
+        String expressionString = expression.replace(" ", "").replace("+", " + ").replace("*", " * ").replace("/", " / ").replace("^", " ^ ").replace("%", " % ").replace("-", " - ").replace("  -", " -");
         String returnString = expressionString;
         for (char operand : operands) {
-            while (returnString.contains("" + operand)) {
+            while (returnString.trim().substring(1).contains("" + operand)) {
                 int index = expressionString.indexOf("" + operand);
+                if (expressionString.startsWith("-")) {
+                    index = (" " + expressionString.substring(1)).indexOf("" + operand);
+                }
                 returnString = expressionString.substring(0, index - 1) + operand + expressionString.substring(index + 2, expressionString.length());
                 String[] str = expressionString.substring(0, index).split(" ");
-                String firstNumber = str[str.length - 1];
-                if (str.length - 1 > 1) {
-                    if (str[str.length - 2].equals("-")) {
-                        Pattern intPattern = Pattern.compile("-?\\d+");
-                        if (!intPattern.matcher(str[str.length - 3]).matches()) {
+                if (str.length > 0) {
+                    String firstNumber = str[str.length - 1];
+                    if (str.length - 1 > 1) {
+                        if (str[str.length - 2].equals("-")) {
+                            Pattern intPattern = Pattern.compile("-?\\d+");
+                            if (!intPattern.matcher(str[str.length - 3]).matches()) {
+                                firstNumber = "- " + firstNumber;
+                            }
+                        }
+                    } else if (str.length - 1 > 0) {
+                        if (str[str.length - 2].equals("-")) {
                             firstNumber = "- " + firstNumber;
                         }
                     }
-                } else if (str.length - 1 > 0) {
-                    if (str[str.length - 2].equals("-")) {
-                        firstNumber = "- " + firstNumber;
+                    str = expressionString.substring(index + 2).split(" ");
+                    int count = 0;
+                    String secondNumber = "";
+                    while (secondNumber.equals("")) {
+                        secondNumber = str[count];
+                        count++;
+                    }
+                    if (secondNumber.equals("-")) {
+                        secondNumber = "- " + str[count];
+                    }
+                    String calcExpression = firstNumber + operand + secondNumber;
+                    String result = calc(firstNumber.replace(" ", ""), "" + operand, secondNumber.replace(" ", "")).toString();
+                    returnString = returnString.replace(calcExpression, result);
+                    if (steps) {
+                        stepString += " =\n" + returnString;
                     }
                 }
-                str = expressionString.substring(index + 2).split(" ");
-                int count = 0;
-                String secondNumber = "";
-                while (secondNumber.equals("")){
-                    secondNumber = str[count];
-                    count++;
-                }
-                if(secondNumber.equals("-")){
-                    secondNumber = " - " +  str[count];
-                }
-                String calcExpression = firstNumber + operand + secondNumber;
-                String result = calc(calcExpression).toString();
-                returnString = returnString.replace(calcExpression, result);
+                expressionString = returnString;
             }
-            expressionString = returnString;
         }
         return returnString;
     }
@@ -125,79 +136,66 @@ class Calculator {
      * @param expression the math expression to calculate
      * @return returns a BigDecimal with the answer
      */
-    private BigDecimal calc(String expression) {
-        stepString = "";
-        ArrayList<BigDecimal> numbers = new ArrayList<>();
-        ArrayList<String> operands = new ArrayList<>();
-        //Regex expression for any number
-        Pattern intPattern = Pattern.compile("-?\\d+");
-        //Regex expression for each operand
-        Pattern operandPattern = Pattern.compile("\\+?\\-?\\*?\\^?\\%?\\/?");
-        String[] str = expression.replace(" ", "").replace("+", " ").replace("*", " ").replace("/", " ").replace("^", " ").replace("%", " ").replace("-", " -").split(" ");
-        //adds each number to the number list
-        String operandString = expression;
-        if(expression.startsWith("-")){
-            operandString = expression.substring(1);
-        }
-        boolean wasNumber = false;
-        for (String number : str) {
-            if (wasNumber) {
-                number = number.replace("-", "");
-            }
-            if (intPattern.matcher("" + number).matches()) {
-                numbers.add(new BigDecimal(number));
-                operandString = operandString.replaceFirst(number, "");
-                wasNumber = true;
-            } else {
-                wasNumber = false;
-            }
-        }
-        char[] chars = operandString.replace("-?\\d+", "").replace(" ", "").toCharArray();
-        //adds each operator to the operator list
-        for (char character : chars) {
-            if (operandPattern.matcher("" + character).matches()) {
-                operands.add("" + character);
-            }
-        }
+    private BigDecimal calc(String firstNumber, String operand, String secondNumber) {
         //Decide what operation must be used.
-        BigDecimal number = new BigDecimal("" + numbers.get(0));
-        for (int i = 1; i < numbers.size(); i++) {
-            String operand = operands.get(i - 1);
-            switch (operand) {
-                case "+":
-                    number = number.add(new BigDecimal("" + numbers.get(i)));
-                    break;
-                case "-":
-                    number = number.subtract(new BigDecimal("" + numbers.get(i)));
-                    break;
-                case "*":
-                    number = number.multiply(new BigDecimal("" + numbers.get(i)));
-                    break;
-                case "/":
-                    number = number.divide(new BigDecimal("" + numbers.get(i)));
-                    break;
-                case "^":
-                    number = number.pow(Integer.parseInt(numbers.get(i).toString()));
-                    break;
-                case "%":
-                    number = number.remainder(new BigDecimal("" + numbers.get(i)));
-                    break;
-                default:
-                    break;
-            }
-            if (steps) {
-                stepString += number.toString();
-                boolean anotherOperation = false;
-                for (int o = i + 1; o < numbers.size(); o++) {
-                    stepString += operands.get(o - 1) + numbers.get(o).toString();
-                    anotherOperation = true;
-                }
-                if (anotherOperation) {
-                    stepString += "\n= ";
-                }
-            }
+        BigDecimal number = new BigDecimal(firstNumber);
+        switch (operand) {
+            case "+":
+                number = number.add(new BigDecimal(secondNumber));
+                break;
+            case "-":
+                number = number.subtract(new BigDecimal(secondNumber));
+                break;
+            case "*":
+                number = number.multiply(new BigDecimal(secondNumber));
+                break;
+            case "/":
+                number = number.divide(new BigDecimal(secondNumber));
+                break;
+            case "^":
+                number = number.pow(Integer.parseInt(secondNumber));
+                break;
+            case "%":
+                number = number.remainder(new BigDecimal(secondNumber));
+                break;
+            default:
+                break;
         }
         return number;
+    }
+
+    private ArrayList<String> parseExpression(String expression) {
+        Pattern intPattern = Pattern.compile("-?\\d+");
+        expression = expression.replace(" ", "");
+        String[] operands = {"^", "/", "*", "-", "+", "%"};
+        for (String operand : operands) {
+            expression = expression.replace(operand, " " + operand + " ");
+        }
+        ArrayList<String> operations = new ArrayList<>();
+        String[] str = expression.split(" ");
+        for (String part : str) {
+            if (!part.equals("")) {
+                operations.add(part);
+            }
+        }
+        ArrayList<String> finalList = new ArrayList<>();
+        finalList.add("empty");
+        String lastPart = "";
+        boolean lastWasNumber = false;
+        for (String nextPart : operations) {
+            if (!lastPart.isEmpty()) {
+                lastWasNumber = intPattern.matcher(lastPart).matches();
+                if (intPattern.matcher(nextPart).matches() && !lastWasNumber & !finalList.get(finalList.size() - 1).equals("-")) {
+                    nextPart = "-" + nextPart;
+                }
+                if (!(!lastWasNumber && nextPart.equals("-"))) {
+                    finalList.add(nextPart);
+                }
+            }
+            lastPart = nextPart;
+        }
+        finalList.remove(0);
+        return finalList;
     }
 
     /**
