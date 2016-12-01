@@ -12,13 +12,11 @@ public class CommandWords {
 
     public CommandWords() {
         validCommands.put("help", new HelpCommand());
-        validCommands.put("add", new AddCommand());
         validCommands.put("time", new TimeCommand());
         validCommands.put("gcd", new GCDCommand());
         validCommands.put("lcm", new LCMCommand());
         validCommands.put("factorize", new FactorizeCommand());
         validCommands.put("divisors", new DivisorsCommand());
-        validCommands.put("multiply", new MultiplyCommand());
         validCommands.put("union", new UnionCommand());
         validCommands.put("intersect", new IntersectionCommand());
         validCommands.put("inversemodulo", new InverseModuloCommand());
